@@ -56,16 +56,33 @@ button:active {
     justify-items: center;
 }
 
-#guessingArea {
+.guessingArea {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     justify-items: center;
-    padding: 20px;
+    padding: 10px;
 }
 
 .dropdown {
     width: 90%;
+}
+
+input {
+    background-color: rgb(77, 77, 77);
+    border: 2px solid rgb(77, 77, 77);
+    border-radius: 5px;
+    margin: 5px;
+    color: white;
+}
+
+input:focus {
+    outline: none;
+    border-color: rgb(204, 0, 0);
+}
+
+input::placeholder {
+    color: rgb(200, 200, 200);
 }
 
 #playButton {
@@ -83,4 +100,8 @@ button:active {
 
 #playButton img{
     width: 30px;
+}
+
+.youtube {
+    margin-bottom: 20px;
 }

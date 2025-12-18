@@ -1,0 +1,19 @@
+import json
+
+old_file = '/Users/brandenhaynie/Documents/Documents - Branden’s MacBook Air/Mario Kart Heardle/js/Every Mario Kart Track - Track with Song.json'
+
+with open(old_file, 'r') as f:
+    data = json.load(f)
+
+for track in data:
+    oldUrl = track['Music']
+    oldUrl = oldUrl.replace('https://youtu.be/', 'https://www.youtube.com/embed/')
+    oldUrl = oldUrl.split('?')[0]
+    oldUrl = oldUrl + '?enablejsapi=1'
+    track['Music'] = oldUrl
+
+
+new_file = '/Users/brandenhaynie/Documents/Documents - Branden’s MacBook Air/Mario Kart Heardle/js/Every Mario Kart Track.json'
+
+with open(new_file, 'w') as f:
+    json.dump(data, f, indent=4)

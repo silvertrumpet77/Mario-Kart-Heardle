@@ -19,28 +19,152 @@
             </button>
         </div>
         <div id="main">
-            <div id="guessingArea">
+            <div class="guessingArea" id="guess1">
+                <div>
+                    <h2>Guess 1</h2>
+                </div>
                 <div class="guesses">
                     <label for="game">Game</label>
                     <input id="game" class="dropdown" list="gameOptions" placeholder="Type...">
                     <datalist id="gameOptions">
-                        <option value="Mario Kart 64">
-                        <option value="Mario Kart: Super Circuit">
-                        <option value="Mario Kart: Double Dash!!">
-                        <option value="Mario Kart DS">
-                        <option value="Mario Kart Wii">
-                        <option value="Mario Kart 7">
-                        <option value="Mario Kart 8 Deluxe">
+                        <option value="SNES">
+                        <option value="N64">
+                        <option value="GBA">
+                        <option value="GCN">
+                        <option value="DS">
+                        <option value="Wii">
+                        <option value="3DS">
+                        <option value="Switch">
                     </datalist>
-                </div>
-                <div>
-                    <label for="cup">Cup</label>
-                    <input id="cup" class="dropdown" list="cupOptions" placeholder="Type...">
                 </div>
                 <div>
                     <label for="track">Track</label>
                     <input id="track" class="dropdown" list="trackOptions" placeholder="Type...">
-                </div>  
+                    <datalist id="trackOptions"></datalist>
+                </div>
+            </div>
+            <div class="guessingArea" id="guess2" style="display: none">
+                <div>
+                    <h2>Guess 2</h2>
+                </div>
+                <div class="guesses">
+                    <label for="game">Game</label>
+                    <input id="game" class="dropdown" list="gameOptions" placeholder="Type...">
+                    <datalist id="gameOptions">
+                        <option value="SNES">
+                        <option value="N64">
+                        <option value="GBA">
+                        <option value="GCN">
+                        <option value="DS">
+                        <option value="Wii">
+                        <option value="3DS">
+                        <option value="Switch">
+                    </datalist>
+                </div>
+                <div>
+                    <label for="track">Track</label>
+                    <input id="track" class="dropdown" list="trackOptions" placeholder="Type...">
+                    <datalist id="trackOptions"></datalist>
+                </div> 
+            </div>
+            <div class="guessingArea" id="guess3" style="display: none">
+                <div>
+                    <h2>Guess 3</h2>
+                </div>
+                <div class="guesses">
+                    <label for="game">Game</label>
+                    <input id="game" class="dropdown" list="gameOptions" placeholder="Type...">
+                    <datalist id="gameOptions">
+                        <option value="SNES">
+                        <option value="N64">
+                        <option value="GBA">
+                        <option value="GCN">
+                        <option value="DS">
+                        <option value="Wii">
+                        <option value="3DS">
+                        <option value="Switch">
+                    </datalist>
+                </div>
+                <div>
+                    <label for="track">Track</label>
+                    <input id="track" class="dropdown" list="trackOptions" placeholder="Type...">
+                    <datalist id="trackOptions"></datalist>
+                </div>
+            </div>
+            <div class="guessingArea" id="guess4" style="display: none">
+                <div>
+                    <h2>Guess 4</h2>
+                </div>
+                <div class="guesses">
+                    <label for="game">Game</label>
+                    <input id="game" class="dropdown" list="gameOptions" placeholder="Type...">
+                    <datalist id="gameOptions">
+                        <option value="SNES">
+                        <option value="N64">
+                        <option value="GBA">
+                        <option value="GCN">
+                        <option value="DS">
+                        <option value="Wii">
+                        <option value="3DS">
+                        <option value="Switch">
+                    </datalist>
+                </div>
+                <div>
+                    <label for="track">Track</label>
+                    <input id="track" class="dropdown" list="trackOptions" placeholder="Type...">
+                    <datalist id="trackOptions"></datalist>
+                </div> 
+            </div>
+            <div class="guessingArea" id="guess5" style="display: none">
+                <div>
+                    <h2>Guess 5</h2>
+                </div>
+                <div class="guesses">
+                    <label for="game">Game</label>
+                    <input id="game" class="dropdown" list="gameOptions" placeholder="Type...">
+                    <datalist id="gameOptions">
+                        <option value="SNES">
+                        <option value="N64">
+                        <option value="GBA">
+                        <option value="GCN">
+                        <option value="DS">
+                        <option value="Wii">
+                        <option value="3DS">
+                        <option value="Switch">
+                    </datalist>
+                </div>
+                <div>
+                    <label for="track">Track</label>
+                    <input id="track" class="dropdown" list="trackOptions" placeholder="Type...">
+                    <datalist id="trackOptions"></datalist>
+                </div> 
+            </div>
+            <div class="guessingArea" id="guess6" style="display: none">
+                <div>
+                    <h2>Guess 6</h2>
+                </div>
+                <div class="guesses">
+                    <label for="game">Game</label>
+                    <input id="game" class="dropdown" list="gameOptions" placeholder="Type...">
+                    <datalist id="gameOptions">
+                        <option value="SNES">
+                        <option value="N64">
+                        <option value="GBA">
+                        <option value="GCN">
+                        <option value="DS">
+                        <option value="Wii">
+                        <option value="3DS">
+                        <option value="Switch">
+                    </datalist>
+                </div>
+                <div>
+                    <label for="track">Track</label>
+                    <input id="track" class="dropdown" list="trackOptions" placeholder="Type...">
+                    <datalist id="trackOptions"></datalist>
+                </div> 
+            </div>
+            <div class="youtube">
+                <iframe id="youtube" width="0" height="0" src="https://www.youtube.com/embed/wqU6MA_VMXI?enablejsapi=1" title="YouTube video player" frameborder="0" allow="autoplay; encrypted-media"></iframe>
             </div>
             <div id="audioPlayer">
                 <button id="playButton">
@@ -51,8 +175,9 @@
                 <button id="submitGuess">Guess</button>
             </div>
         </div>
-        <div id="footer">
+        <footer id="footer">
             <p>Thanks for playing!</p>
-        </div>
+        </footer>
+        <script src="https://www.youtube.com/iframe_api"></script>
     </body>
 </html>

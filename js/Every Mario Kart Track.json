@@ -1,4 +1,4 @@
-const data = [
+[
     {
         "Track": "Mario Circut",
         "Game": "SNES",
@@ -1183,78 +1183,20 @@ const data = [
         "Track": "Toad Circuit*3DS",
         "Game": "Switch",
         "Music": "https://www.youtube.com/embed/iwpIxjweeuY?enablejsapi=1"
-    }
-];
-
-const cupInput = document.getElementById("cup");
-const trackInput = document.getElementById("track");
-const gameInput = document.getElementById("game");
-const cupOptions = document.getElementById("cupOptions");
-const trackOptions = document.getElementById("trackOptions");
-const gameOptions = document.getElementById("gameOptions");
-const playButton = document.getElementById("playButton");
-let playing = false;
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Populate track options on game selection
-    gameInput.addEventListener('change', function() {
-        trackOptions.innerHTML = '';
-        for (let elem in data) {
-            if (data[elem].Game === gameInput.value) {
-                trackOptions.appendChild(new Option(data[elem].Track, data[elem].Track));
-            }
-        }
-    });
-
-    playButton.addEventListener('click', function() {
-      // If player isn't ready yet, wait for it and then play.
-      if (!player || typeof player.playVideo !== 'function') {
-        let attempts = 0;
-        const waitAndPlay = () => {
-          attempts++;
-          if (player && typeof player.playVideo === 'function') {
-            try { player.playVideo(); playing = true; } catch (e) {}
-          } else if (attempts < 50) {
-            setTimeout(waitAndPlay, 100);
-          }
-        };
-        waitAndPlay();
-        return;
-      }
-      if (playing) {
-        try { player.pauseVideo(); } catch (e) {}
-        playing = false;
-      } else {
-        try { player.playVideo(); } catch (e) {}
-        playing = true;
-      }
-    });
-
-    pickRandomTrack();
-});
-
-var player;
-  function onPlayerReady(event) {
-    player = event.target;
-    try { player.pauseVideo(); } catch (e) {}
-    playing = false;
-  }
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player('youtube', {
-    playerVars: {
-      'playsinline': 1
     },
-    events: {
-      'onReady': onPlayerReady
+    {
+        "Track": "",
+        "Game": "",
+        "Music": "?enablejsapi=1"
+    },
+    {
+        "Track": "Bowser Castle*",
+        "Game": "3DS",
+        "Music": "?enablejsapi=1"
+    },
+    {
+        "Track": "Donut Plains*",
+        "Game": "3DS",
+        "Music": "?enablejsapi=1"
     }
-  });
-}
-
-function pickRandomTrack() {
-    const currentDate = new Date();
-    currentDate.toLocaleDateString();
-    const seed = currentDate.getFullYear() + currentDate.getMonth() + currentDate.getDate();
-    const randomIndex = Math.floor((Math.sin(seed) + 1) / 2 * data.length);
-    const track = data[randomIndex];
-    console.log(`Randomly selected track: ${track.Track} from ${track.Game}`);
-}
+]
