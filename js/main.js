@@ -1186,25 +1186,49 @@ const data = [
     }
 ];
 
-const cupInput = document.getElementById("cup");
-const trackInput = document.getElementById("track");
-const gameInput = document.getElementById("game");
-const cupOptions = document.getElementById("cupOptions");
-const trackOptions = document.getElementById("trackOptions");
-const gameOptions = document.getElementById("gameOptions");
+const trackInput = document.querySelector('input.track');
+const gameInput = document.querySelector('input.game');
+// Per-guess datalists use unique ids (trackOptions1..6 / gameOptions1..6)
 const playButton = document.getElementById("playButton");
+const youtube = document.getElementById("youtube");
+const guessButton = document.getElementById("submitGuess");
+const allGuesses = document.querySelectorAll('#guess');
+let guessNum = 1;
 let playing = false;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Populate track options on game selection
-    gameInput.addEventListener('change', function() {
-        trackOptions.innerHTML = '';
-        for (let elem in data) {
-            if (data[elem].Game === gameInput.value) {
-                trackOptions.appendChild(new Option(data[elem].Track, data[elem].Track));
+    // Populate track options on game selection (per-guess)
+    document.querySelectorAll('input.game').forEach(function(gameInputElement) {
+        gameInputElement.addEventListener('click', function() {
+            gameInputElement.value = "";
+        });
+
+        gameInputElement.addEventListener('change', function() {
+            const currentGuessArea = gameInputElement.closest('.guessingArea');
+            if (!currentGuessArea) return;
+            // Find the track input inside this guess area
+            const trackInputLocal = currentGuessArea.querySelector('input.track');
+            trackInputLocal.value = "";
+            if (!trackInputLocal) return;
+            const datalistId = trackInputLocal.getAttribute('list');
+            if (!datalistId) return;
+            const trackOptionsElement = document.getElementById(datalistId);
+            if (!trackOptionsElement) return;
+            trackOptionsElement.innerHTML = '';
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].Game === gameInputElement.value) {
+                    trackOptionsElement.appendChild(new Option(data[i].Track, data[i].Track));
+                }
             }
-        }
+        });
     });
+
+    document.querySelectorAll('input.track').forEach(function(trackInputElement) {
+        trackInputElement.addEventListener('click', function() {
+            trackInputElement.value = "";
+        });
+    });
+
 
     playButton.addEventListener('click', function() {
       // If player isn't ready yet, wait for it and then play.
@@ -1213,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const waitAndPlay = () => {
           attempts++;
           if (player && typeof player.playVideo === 'function') {
-            try { player.playVideo(); playing = true; } catch (e) {}
+            try { player.seekTo(0, true); player.playVideo(); playing = true; } catch (e) {}
           } else if (attempts < 50) {
             setTimeout(waitAndPlay, 100);
           }
@@ -1225,12 +1249,57 @@ document.addEventListener('DOMContentLoaded', function() {
         try { player.pauseVideo(); } catch (e) {}
         playing = false;
       } else {
-        try { player.playVideo(); } catch (e) {}
+        try { player.seekTo(0, true); player.playVideo(); } catch (e) {}
         playing = true;
       }
     });
 
-    pickRandomTrack();
+    const trackOfTheDay = pickRandomTrack();
+
+    youtube.src = trackOfTheDay.Music;
+
+    guessButton.addEventListener('click', function() {
+        // gameInput.classList.remove('correct', 'incorrect');
+        // trackInput.classList.remove('correct', 'incorrect');
+        currentGuess = document.getElementById(`guess${guessNum}`);
+        nextGuess = document.getElementById(`guess${guessNum + 1}`);
+        // console.log(currentGuess);
+        // console.log(nextGuess);
+        currentGameInput = currentGuess.querySelector('.game');
+        // console.log(currentGameInput);
+        currentTrackInput = currentGuess.querySelector('.track');
+        // console.log(currentTrackInput);
+
+        if (currentGameInput.value === trackOfTheDay.Game) {
+            currentGameInput.classList.add('correct');
+        } else {
+            currentGameInput.classList.add('incorrect');
+        }
+
+        if (currentTrackInput.value === trackOfTheDay.Track) {
+            currentTrackInput.classList.add('correct');
+        } else if (trackOfTheDay.Track.includes(currentTrackInput.value)) {
+            currentTrackInput.classList.add('almost');
+        } else {
+            currentTrackInput.classList.add('incorrect');
+        }
+
+        currentGameInput.disabled = true;
+        currentTrackInput.disabled = true;
+
+        if (currentGameInput.value === trackOfTheDay.Game && currentTrackInput.value === trackOfTheDay.Track) {
+            alert('Correct!');
+            guessButton.disabled = true;
+        } else if (guessNum === 6) {
+            alert(`Incorrect! The track of the day was ${trackOfTheDay.Track} from ${trackOfTheDay.Game}`);
+            guessButton.disabled = true;
+        } else {
+            nextGuess.style.display = 'grid';
+            if (guessNum <= 6) {
+                guessNum++;
+            }
+        }
+    });
 });
 
 var player;
@@ -1251,10 +1320,43 @@ function onYouTubeIframeAPIReady() {
 }
 
 function pickRandomTrack() {
-    const currentDate = new Date();
-    currentDate.toLocaleDateString();
-    const seed = currentDate.getFullYear() + currentDate.getMonth() + currentDate.getDate();
-    const randomIndex = Math.floor((Math.sin(seed) + 1) / 2 * data.length);
-    const track = data[randomIndex];
-    console.log(`Randomly selected track: ${track.Track} from ${track.Game}`);
+    // const currentDate = new Date();
+    // currentDate.toLocaleDateString();
+    // const seed = currentDate.getFullYear() + currentDate.getMonth() + currentDate.getDate();
+    // const randomIndex = Math.floor((Math.sin(seed) + 1) / 2 * data.length);
+    // const track = data[randomIndex];
+
+    const SHUFFLE_SEED = 0xC0FFEE; // any fixed number
+
+    const startDate = Date.UTC(2024, 0, 1); // fixed epoch
+    const todayUTC = Date.now();
+    const dayIndex = Math.floor((todayUTC - startDate) / 86400000);
+
+    const shuffledData = shuffleDeterministic(data, SHUFFLE_SEED);
+    const index = dayIndex % shuffledData.length;
+    const track = shuffledData[index];
+
+    // console.log(`Randomly selected track: ${track.Track} from ${track.Game}`);
+    return track;
+}
+
+function mulberry32(seed) {
+  return function () {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function shuffleDeterministic(array, seed) {
+  const rng = mulberry32(seed);
+  const arr = [...array];
+
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+
+  return arr;
 }
