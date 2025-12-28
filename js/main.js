@@ -1310,6 +1310,8 @@ document.addEventListener('DOMContentLoaded', function() {
             guessButton.disabled = true;
             resultsOverlay.classList.remove('hidden');
             document.getElementById('answer').textContent = `Answer was ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
+            resultString = parseResult(finalResult);
+            document.getElementById('results').textContent = resultString;
         } else {
             nextGuess.classList.remove('hidden');
             if (guessNum <= 6) {
