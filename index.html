@@ -44,7 +44,7 @@
                     <datalist id="trackOptions1"></datalist>
                 </div>
             </div>
-            <div class="guessingArea" id="guess2" style="display: none">
+            <div class="guessingArea hidden" id="guess2">
                 <div>
                     <h2>Guess 2</h2>
                 </div>
@@ -68,7 +68,7 @@
                     <datalist id="trackOptions2"></datalist>
                 </div> 
             </div>
-            <div class="guessingArea" id="guess3" style="display: none">
+            <div class="guessingArea hidden" id="guess3">
                 <div>
                     <h2>Guess 3</h2>
                 </div>
@@ -92,7 +92,7 @@
                     <datalist id="trackOptions3"></datalist>
                 </div>
             </div>
-            <div class="guessingArea" id="guess4" style="display: none">
+            <div class="guessingArea hidden" id="guess4">
                 <div>
                     <h2>Guess 4</h2>
                 </div>
@@ -116,7 +116,7 @@
                     <datalist id="trackOptions4"></datalist>
                 </div> 
             </div>
-            <div class="guessingArea" id="guess5" style="display: none">
+            <div class="guessingArea hidden" id="guess5">
                 <div>
                     <h2>Guess 5</h2>
                 </div>
@@ -140,7 +140,7 @@
                     <datalist id="trackOptions5"></datalist>
                 </div> 
             </div>
-            <div class="guessingArea" id="guess6" style="display: none">
+            <div class="guessingArea hidden" id="guess6">
                 <div>
                     <h2>Guess 6</h2>
                 </div>
@@ -176,8 +176,17 @@
                 <button id="submitGuess">Guess</button>
             </div>
         </div>
+        <div class="overlay hidden" id="gameOver">
+            <div class="close">
+                <button id="close">X</button>
+            </div>
+            <div id="answer"></div>
+            <h2>Thanks for Playing!</h2>
+            <div id="results" style="white-space: pre; text-align: left;"></div>
+            <button id="share">Share Your Results</button>
+        </div>
         <footer id="footer">
-            <p>Thanks for playing!</p>
+            <p>Good luck!</p>
         </footer>
         <script src="https://www.youtube.com/iframe_api"></script>
     </body>

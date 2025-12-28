@@ -49,6 +49,7 @@ button {
 
 button:hover {
     background-color: rgb(255, 51, 51);
+    cursor: pointer;
 }
 
 button:active {
@@ -61,7 +62,7 @@ button:disabled {
 }
 
 #main {
-    padding: 20px;
+    padding: 10px;
     display: grid;
     justify-items: center;
 }
@@ -71,7 +72,14 @@ button:disabled {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     justify-items: center;
-    padding: 10px;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.guessingArea.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
 }
 
 .dropdown {
@@ -106,7 +114,7 @@ input.almost {
 }
 
 input.incorrect {
-    border-color: rgb(204, 0, 0);
+    border-color: rgb(0, 0, 0);
     background-color: rgb(77, 77, 77);
 }
 
@@ -124,9 +132,78 @@ input.incorrect {
 }
 
 #playButton img{
-    width: 30px;
+    width: 50px;
 }
 
 .youtube {
-    margin-bottom: 20px;
+    margin: 0px;
+}
+
+#submitGuess {
+    width: 100px;
+    height: 50px;
+    font-size: 20px;
+}
+
+.overlay {
+    position: fixed;
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr 2fr;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 1;
+    width: 80%;
+    height: 60%;
+    border: 5px solid darkgrey;
+    background-color: rgb(35, 35, 35);
+    align-items: center;
+    align-content: bottom;
+    justify-content: center;
+    text-align: center;
+    transition: opacity 0.5s ease;
+}
+
+.overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    /* keep the element in the flow so opacity can transition; make it non-interactive */
+    transition: opacity 0.5s ease;
+}
+
+#close {
+    font-size: 15pt;
+    background-color: darkgrey;
+}
+
+#close:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 6px 10px;
+    z-index: 10;
+}
+
+
+@media screen and (max-width: 480px) {
+    input {
+        width: 80%;
+        font-size: 13pt;
+    }
+
+    h2 {
+        font-size: 12pt;
+    }
+}
+
+/* Center the results box within the overlay without changing its text alignment */
+#results {
+    justify-self: center;
+    align-self: center;
+    display: inline-block; /* keeps the element sized to its contents */
 }

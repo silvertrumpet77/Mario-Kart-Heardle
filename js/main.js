@@ -1193,8 +1193,10 @@ const playButton = document.getElementById("playButton");
 const youtube = document.getElementById("youtube");
 const guessButton = document.getElementById("submitGuess");
 const allGuesses = document.querySelectorAll('#guess');
+const resultsOverlay = document.getElementById("gameOver")
 let guessNum = 1;
 let playing = false;
+let finalResult = '';
 
 document.addEventListener('DOMContentLoaded', function() {
     // Populate track options on game selection (per-guess)
@@ -1259,46 +1261,72 @@ document.addEventListener('DOMContentLoaded', function() {
     youtube.src = trackOfTheDay.Music;
 
     guessButton.addEventListener('click', function() {
-        // gameInput.classList.remove('correct', 'incorrect');
-        // trackInput.classList.remove('correct', 'incorrect');
-        currentGuess = document.getElementById(`guess${guessNum}`);
-        nextGuess = document.getElementById(`guess${guessNum + 1}`);
-        // console.log(currentGuess);
-        // console.log(nextGuess);
-        currentGameInput = currentGuess.querySelector('.game');
-        // console.log(currentGameInput);
-        currentTrackInput = currentGuess.querySelector('.track');
-        // console.log(currentTrackInput);
+        let currentGuess = document.getElementById(`guess${guessNum}`);
+        let nextGuess = document.getElementById(`guess${guessNum + 1}`);
+        let currentGameInput = currentGuess.querySelector('.game');
+        let currentTrackInput = currentGuess.querySelector('.track');
+        // use top-level `finalResult` so results accumulate across guesses
 
-        if (currentGameInput.value === trackOfTheDay.Game) {
+        // normalize inputs for robust comparison
+        const gameVal = currentGameInput.value.trim().toLowerCase();
+        const trackVal = currentTrackInput.value.trim().toLowerCase();
+        const answerGame = String(trackOfTheDay.Game).trim().toLowerCase();
+        const answerTrack = String(trackOfTheDay.Track).trim().toLowerCase();
+
+        if (gameVal && gameVal === answerGame) {
             currentGameInput.classList.add('correct');
+            finalResult += '🟩';
         } else {
             currentGameInput.classList.add('incorrect');
+            finalResult += '⬛️';
         }
 
-        if (currentTrackInput.value === trackOfTheDay.Track) {
+        // exact match -> correct
+        if (trackVal && trackVal === answerTrack) {
             currentTrackInput.classList.add('correct');
-        } else if (trackOfTheDay.Track.includes(currentTrackInput.value)) {
+            finalResult += '🟩';
+        // partial input (non-empty) that's contained in answer -> almost
+        } else if (trackVal.length > 0 && answerTrack.includes(trackVal)) {
             currentTrackInput.classList.add('almost');
+            finalResult += '🟨';
+        // otherwise incorrect
         } else {
             currentTrackInput.classList.add('incorrect');
+            finalResult += '⬛️';
         }
 
         currentGameInput.disabled = true;
         currentTrackInput.disabled = true;
 
         if (currentGameInput.value === trackOfTheDay.Game && currentTrackInput.value === trackOfTheDay.Track) {
-            alert('Correct!');
+            //alert('Correct!');
             guessButton.disabled = true;
+            resultsOverlay.classList.remove('hidden');
+            document.getElementById('answer').textContent = `Correct! ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
+            resultString = parseResult(finalResult);
+            document.getElementById('results').textContent = resultString;
         } else if (guessNum === 6) {
-            alert(`Incorrect! The track of the day was ${trackOfTheDay.Track} from ${trackOfTheDay.Game}`);
+            // alert(`Incorrect! The track of the day was ${trackOfTheDay.Track} from ${trackOfTheDay.Game}`);
             guessButton.disabled = true;
+            resultsOverlay.classList.remove('hidden');
+            document.getElementById('answer').textContent = `Answer was ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
+            resultString = parseResult(finalResult);
+            document.getElementById('results').textContent = resultString;
         } else {
-            nextGuess.style.display = 'grid';
+            nextGuess.classList.remove('hidden');
             if (guessNum <= 6) {
                 guessNum++;
             }
         }
+    });
+
+    document.getElementById('close').addEventListener('click', function () {
+        resultsOverlay.classList.add('hidden');
+    });
+
+    document.getElementById('share').addEventListener('click', function () {
+        navigator.clipboard.writeText(resultString);
+        document.getElementById('share').textContent = 'copied to clipboard';
     });
 });
 
@@ -1359,4 +1387,55 @@ function shuffleDeterministic(array, seed) {
   }
 
   return arr;
+}
+
+function parseResult(result) {
+    /* turns ⬛️⬛️⬛️⬛️⬛️⬛️⬛️⬛️⬛️⬛️⬛️⬛️ into 
+    1️⃣⬛️⬛️ 4️⃣⬛️⬛️
+    2️⃣⬛️⬛️ 5️⃣⬛️⬛️
+    3️⃣⬛️⬛️ 6️⃣⬛️⬛️
+    */
+    // Split into grapheme clusters so emoji/variation selectors aren't split incorrectly
+    let segments = [];
+    if (typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function') {
+        segments = [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(result)].map(s => s.segment);
+    } else {
+        try {
+            segments = result.match(/(\P{M}\p{M}*|\p{Extended_Pictographic}\uFE0F?|\p{Extended_Pictographic})/gu) || [];
+        } catch (e) {
+            segments = Array.from(result);
+        }
+    }
+
+    // Each guess contributes 2 segments (game + track)
+    const guessCount = Math.floor(segments.length / 2);
+    if (guessCount === 0) return '';
+
+    const numEmoji = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣'];
+
+    // If 3 or fewer guesses, show that many rows (left column only).
+    if (guessCount <= 3) {
+        const lines = [];
+        for (let i = 0; i < guessCount; i++) {
+            const tiles = segments.slice(i * 2, i * 2 + 2).join('');
+            lines.push(`${numEmoji[i + 1]}${tiles}`);
+        }
+        return lines.join('\n');
+    }
+
+    // More than 3 guesses: use 3 rows, left col = guesses 1..3, right col = guesses 4..up to guessCount
+    const rows = 3;
+    const lines = [];
+    for (let i = 0; i < rows; i++) {
+        const leftTiles = segments.slice(i * 2, i * 2 + 2).join('');
+        const rightGuessIndex = i + rows; // zero-based guess index for right column
+        if (rightGuessIndex < guessCount) {
+            const rightTiles = segments.slice(rightGuessIndex * 2, rightGuessIndex * 2 + 2).join('');
+            lines.push(`${numEmoji[i + 1]}${leftTiles} ${numEmoji[rightGuessIndex + 1]}${rightTiles}`);
+        } else {
+            lines.push(`${numEmoji[i + 1]}${leftTiles}`);
+        }
+    }
+
+    return lines.join('\n');
 }
