@@ -1437,5 +1437,12 @@ function parseResult(result) {
         }
     }
 
-    return lines.join('\n');
+    let final = lines.join('\n');
+    // Prepend a readable date string so shared results show the date (e.g. "Dec 29, 2025")
+    // Use UTC to match pickRandomTrack's UTC day calculation
+    const date = new Date();
+    const dateString = date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+    final = `MK Heardle ${dateString}\n` + final;
+    console.log(final);
+    return final;
 }
