@@ -1304,14 +1304,14 @@ document.addEventListener('DOMContentLoaded', function() {
             resultsOverlay.classList.remove('hidden');
             document.getElementById('answer').textContent = `Correct! ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
             resultString = parseResult(finalResult);
-            document.getElementById('results').textContent = resultString;
+            document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
         } else if (guessNum === 6) {
             // alert(`Incorrect! The track of the day was ${trackOfTheDay.Track} from ${trackOfTheDay.Game}`);
             guessButton.disabled = true;
             resultsOverlay.classList.remove('hidden');
             document.getElementById('answer').textContent = `Answer was ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
             resultString = parseResult(finalResult);
-            document.getElementById('results').textContent = resultString;
+            document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
         } else {
             nextGuess.classList.remove('hidden');
             if (guessNum <= 6) {
@@ -1412,6 +1412,7 @@ function parseResult(result) {
     if (guessCount === 0) return '';
 
     const numEmoji = ['0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣'];
+    let final = '';
 
     // If 3 or fewer guesses, show that many rows (left column only).
     if (guessCount <= 3) {
@@ -1420,28 +1421,29 @@ function parseResult(result) {
             const tiles = segments.slice(i * 2, i * 2 + 2).join('');
             lines.push(`${numEmoji[i + 1]}${tiles}`);
         }
-        return lines.join('\n');
-    }
+        final = lines.join('\n');
+    } else {
 
-    // More than 3 guesses: use 3 rows, left col = guesses 1..3, right col = guesses 4..up to guessCount
-    const rows = 3;
-    const lines = [];
-    for (let i = 0; i < rows; i++) {
-        const leftTiles = segments.slice(i * 2, i * 2 + 2).join('');
-        const rightGuessIndex = i + rows; // zero-based guess index for right column
-        if (rightGuessIndex < guessCount) {
-            const rightTiles = segments.slice(rightGuessIndex * 2, rightGuessIndex * 2 + 2).join('');
-            lines.push(`${numEmoji[i + 1]}${leftTiles} ${numEmoji[rightGuessIndex + 1]}${rightTiles}`);
-        } else {
-            lines.push(`${numEmoji[i + 1]}${leftTiles}`);
+        // More than 3 guesses: use 3 rows, left col = guesses 1..3, right col = guesses 4..up to guessCount
+        const rows = 3;
+        const lines = [];
+        for (let i = 0; i < rows; i++) {
+            const leftTiles = segments.slice(i * 2, i * 2 + 2).join('');
+            const rightGuessIndex = i + rows; // zero-based guess index for right column
+            if (rightGuessIndex < guessCount) {
+                const rightTiles = segments.slice(rightGuessIndex * 2, rightGuessIndex * 2 + 2).join('');
+                lines.push(`${numEmoji[i + 1]}${leftTiles} ${numEmoji[rightGuessIndex + 1]}${rightTiles}`);
+            } else {
+                lines.push(`${numEmoji[i + 1]}${leftTiles}`);
+            }
         }
-    }
 
-    let final = lines.join('\n');
+        final = lines.join('\n');
+    }
     // Prepend a readable date string so shared results show the date (e.g. "Dec 29, 2025")
     // Use UTC to match pickRandomTrack's UTC day calculation
     const date = new Date();
-    const dateString = date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+    const dateString = date.toLocaleDateString(undefined, { year: '2-digit', month: 'numeric', day: 'numeric', timeZone: 'UTC' });
     final = `MK Heardle ${dateString}\n` + final;
     console.log(final);
     return final;
