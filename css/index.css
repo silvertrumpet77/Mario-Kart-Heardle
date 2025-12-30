@@ -175,6 +175,10 @@ input.incorrect {
     transition: opacity 0.5s ease;
 }
 
+#statsOverlay {
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+
 #resultsButton.hidden {
     opacity: 0;
     pointer-events: none;

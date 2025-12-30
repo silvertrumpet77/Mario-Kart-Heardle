@@ -1375,7 +1375,7 @@ document.addEventListener('DOMContentLoaded', function() {
             accuracy = Math.round((totalCorrect / totalGames) * 100);                           
         }
         document.getElementById('correctPercent').textContent = `Percent Guessed: ${accuracy}%`;
-        document.getElementById('streakCount').textContent = `Current Streak: ${streakCount}`;
+        document.getElementById('currentStreak').textContent = `Current Streak: ${streakCount}`;
     });
 
     document.getElementById('resultsButton').addEventListener('click', function () {
