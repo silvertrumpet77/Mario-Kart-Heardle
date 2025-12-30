@@ -1198,6 +1198,15 @@ let guessNum = 1;
 let playing = false;
 let finalResult = '';
 
+let totalCorrect = localStorage.getItem('totalCorrect');
+let totalGames = localStorage.getItem('totalGames');
+let lastPlayedDate = localStorage.getItem('lastPlayedDate');
+let streakCount = localStorage.getItem('streakCount');
+if (!totalCorrect) totalCorrect = 0;
+if (!totalGames) totalGames = 0;
+if (!streakCount) streakCount = 0;
+if (!lastPlayedDate) lastPlayedDate = '';
+
 document.addEventListener('DOMContentLoaded', function() {
     // Populate track options on game selection (per-guess)
     document.querySelectorAll('input.game').forEach(function(gameInputElement) {
@@ -1302,16 +1311,41 @@ document.addEventListener('DOMContentLoaded', function() {
             //alert('Correct!');
             guessButton.disabled = true;
             resultsOverlay.classList.remove('hidden');
+            document.getElementById('resultsButton').classList.remove('hidden');
             document.getElementById('answer').textContent = `Correct! ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
             resultString = parseResult(finalResult);
             document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
+
+            const currentDateStr = new Date().toLocaleDateString();
+            if (lastPlayedDate != currentDateStr) {
+                // already played today; don't increment streak
+                totalCorrect++;
+                localStorage.setItem('totalCorrect', totalCorrect);
+                if (lastPlayedDate === new Date(Date.now() - 86400000).toLocaleDateString()) {
+                    // last played was yesterday; increment streak
+                    streakCount++;
+                } else {
+                    // last played was before yesterday; reset streak
+                    streakCount = 1;
+                }
+                localStorage.setItem('streakCount', streakCount);
+                localStorage.setItem('lastPlayedDate', currentDateStr);
+                totalGames++;
+                localStorage.setItem('totalGames', totalGames);
+            }
         } else if (guessNum === 6) {
             // alert(`Incorrect! The track of the day was ${trackOfTheDay.Track} from ${trackOfTheDay.Game}`);
             guessButton.disabled = true;
             resultsOverlay.classList.remove('hidden');
+            document.getElementById('resultsButton').classList.remove('hidden');
             document.getElementById('answer').textContent = `Answer was ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
             resultString = parseResult(finalResult);
             document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
+
+            totalGames++;
+            localStorage.setItem('totalGames', totalGames);
+            streakCount = 0;
+            localStorage.setItem('streakCount', streakCount);
         } else {
             nextGuess.classList.remove('hidden');
             if (guessNum <= 6) {
@@ -1320,13 +1354,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('close').addEventListener('click', function () {
+    document.getElementById('closeResults').addEventListener('click', function () {
         resultsOverlay.classList.add('hidden');
+    });
+
+    document.getElementById('closeStats').addEventListener('click', function () {
+        document.getElementById('statsOverlay').classList.add('hidden');
     });
 
     document.getElementById('share').addEventListener('click', function () {
         navigator.clipboard.writeText(resultString);
-        document.getElementById('share').textContent = 'copied to clipboard';
+        document.getElementById('share').textContent = 'Copied to Clipboard';
+    });
+
+    document.getElementById('stats').addEventListener('click', function () {
+        document.getElementById('statsOverlay').classList.remove('hidden');
+        document.getElementById('gamesPlayed').textContent = `Total Games: ${totalGames}`;
+        let accuracy = 0;
+        if (totalGames > 0) {
+            accuracy = Math.round((totalCorrect / totalGames) * 100);                           
+        }
+        document.getElementById('correctPercent').textContent = `Percent Guessed: ${accuracy}%`;
+        document.getElementById('streakCount').textContent = `Current Streak: ${streakCount}`;
+    });
+
+    document.getElementById('resultsButton').addEventListener('click', function () {
+        resultsOverlay.classList.remove('hidden');
     });
 });
 

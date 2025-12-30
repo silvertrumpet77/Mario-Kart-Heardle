@@ -175,15 +175,28 @@
             <div id="guessButton">
                 <button id="submitGuess">Guess</button>
             </div>
+            <div id="showResults">
+                <button id="resultsButton" class="hidden">Show Results</button>
+            </div>
         </div>
         <div class="overlay hidden" id="gameOver">
             <div class="close">
-                <button id="close">X</button>
+                <button id="closeResults">X</button>
             </div>
             <div id="answer"></div>
             <h2>Thanks for Playing!</h2>
             <div id="results" style="white-space: pre; text-align: left;"></div>
             <button id="share">Share Your Results</button>
+        </div>
+        <div class="overlay hidden" id="statsOverlay">
+            <div class="close">
+                <button id="closeStats">X</button>
+            </div>
+            <h2>Stats</h2>
+            <div id="correctPercent" style="white-space: pre; text-align: left;"></div>
+            <div id="gamesPlayed" style="white-space: pre; text-align: left;"></div>
+            <div id="currentStreak" style="white-space: pre; text-align: left;"></div>
+            <div id="maxStreak" style="white-space: pre; text-align: left;"></div>
         </div>
         <footer id="footer">
             <p>Good luck!</p>

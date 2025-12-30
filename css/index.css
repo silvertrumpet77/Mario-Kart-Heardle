@@ -139,11 +139,15 @@ input.incorrect {
     margin: 0px;
 }
 
-#submitGuess {
+#submitGuess, #resultsButton {
     width: 100px;
     height: 50px;
     font-size: 20px;
+    opacity: 1;
+    transition: opacity 0.5s ease;
 }
+
+
 
 .overlay {
     position: fixed;
@@ -171,12 +175,18 @@ input.incorrect {
     transition: opacity 0.5s ease;
 }
 
-#close {
+#resultsButton.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+#closeResults, #closeStats {
     font-size: 15pt;
     background-color: darkgrey;
 }
 
-#close:hover {
+#closeResults:hover, #closeStats:hover {
     cursor: pointer;
     text-decoration: underline;
 }
