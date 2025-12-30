@@ -189,10 +189,14 @@ input.incorrect {
     z-index: 10;
 }
 
+#answer {
+    padding-top: 20px;
+}
+
 
 @media screen and (max-width: 480px) {
     input {
-        width: 80%;
+        max-width: 60px;
         font-size: 13pt;
     }
 
@@ -206,4 +210,9 @@ input.incorrect {
     justify-self: center;
     align-self: center;
     display: inline-block; /* keeps the element sized to its contents */
+}
+
+#share {
+    height: 50px;
+    font-size: 15pt;
 }
