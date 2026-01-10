@@ -1209,6 +1209,7 @@ if (!lastPlayedDate) lastPlayedDate = '';
 
 var player;
 let playerReady = false;
+let needsRestart = false;
 
 const trackOfTheDay = pickRandomTrack();
 
@@ -1217,7 +1218,16 @@ const src = trackOfTheDay.Music;
 function onPlayerReady(event) {
     player = event.target;
     playerReady = true;
+}
+
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.PLAYING && needsRestart) {
+    needsRestart = false;
+    player.seekTo(0, true);
   }
+}
+
+
 window.onYouTubeIframeAPIReady = function() {
   player = new YT.Player('youtube', {
     videoId: src,
@@ -1225,7 +1235,8 @@ window.onYouTubeIframeAPIReady = function() {
       'playsinline': 1
     },
     events: {
-      'onReady': onPlayerReady
+      'onReady': onPlayerReady,
+      'onStateChange': onPlayerStateChange
     }
   });
 }
@@ -1412,7 +1423,7 @@ function playButtonClicked() {
     if (state === YT.PlayerState.PLAYING) {
         player.pauseVideo();
     } else {
-        player.seekTo(0, true);
+        needsRestart = true;
         player.playVideo();
     }
 }
