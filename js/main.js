@@ -1207,6 +1207,29 @@ if (!totalGames) totalGames = 0;
 if (!streakCount) streakCount = 0;
 if (!lastPlayedDate) lastPlayedDate = '';
 
+var player;
+let playerReady = false;
+
+const trackOfTheDay = pickRandomTrack();
+
+const src = trackOfTheDay.Music;
+
+function onPlayerReady(event) {
+    player = event.target;
+    playerReady = true;
+  }
+window.onYouTubeIframeAPIReady = function() {
+  player = new YT.Player('youtube', {
+    videoId: src,
+    playerVars: {
+      'playsinline': 1
+    },
+    events: {
+      'onReady': onPlayerReady
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Populate track options on game selection (per-guess)
     document.querySelectorAll('input.game').forEach(function(gameInputElement) {
@@ -1214,24 +1237,7 @@ document.addEventListener('DOMContentLoaded', function() {
             gameInputElement.value = "";
         });
 
-        gameInputElement.addEventListener('change', function() {
-            const currentGuessArea = gameInputElement.closest('.guessingArea');
-            if (!currentGuessArea) return;
-            // Find the track input inside this guess area
-            const trackInputLocal = currentGuessArea.querySelector('input.track');
-            trackInputLocal.value = "";
-            if (!trackInputLocal) return;
-            const datalistId = trackInputLocal.getAttribute('list');
-            if (!datalistId) return;
-            const trackOptionsElement = document.getElementById(datalistId);
-            if (!trackOptionsElement) return;
-            trackOptionsElement.innerHTML = '';
-            for (let i = 0; i < data.length; i++) {
-                if (data[i].Game === gameInputElement.value) {
-                    trackOptionsElement.appendChild(new Option(data[i].Track, data[i].Track));
-                }
-            }
-        });
+        gameInputElement.addEventListener('change', () => updateTrackList(gameInputElement));
     });
 
     document.querySelectorAll('input.track').forEach(function(trackInputElement) {
@@ -1240,119 +1246,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-
-    playButton.addEventListener('click', function() {
-      // If player isn't ready yet, wait for it and then play.
-      if (!player || typeof player.playVideo !== 'function') {
-        let attempts = 0;
-        const waitAndPlay = () => {
-          attempts++;
-          if (player && typeof player.playVideo === 'function') {
-            try { player.seekTo(0, true); player.playVideo(); playing = true; } catch (e) {}
-          } else if (attempts < 50) {
-            setTimeout(waitAndPlay, 100);
-          }
-        };
-        waitAndPlay();
-        return;
-      }
-      if (playing) {
-        try { player.pauseVideo(); } catch (e) {}
-        playing = false;
-      } else {
-        try { player.seekTo(0, true); player.playVideo(); } catch (e) {}
-        playing = true;
-      }
-    });
+    playButton.addEventListener('click', playButtonClicked);
 
     const trackOfTheDay = pickRandomTrack();
 
     youtube.src = trackOfTheDay.Music;
 
-    guessButton.addEventListener('click', function() {
-        let currentGuess = document.getElementById(`guess${guessNum}`);
-        let nextGuess = document.getElementById(`guess${guessNum + 1}`);
-        let currentGameInput = currentGuess.querySelector('.game');
-        let currentTrackInput = currentGuess.querySelector('.track');
-        // use top-level `finalResult` so results accumulate across guesses
-
-        // normalize inputs for robust comparison
-        const gameVal = currentGameInput.value.trim().toLowerCase();
-        const trackVal = currentTrackInput.value.trim().toLowerCase();
-        const answerGame = String(trackOfTheDay.Game).trim().toLowerCase();
-        const answerTrack = String(trackOfTheDay.Track).trim().toLowerCase();
-
-        if (gameVal && gameVal === answerGame) {
-            currentGameInput.classList.add('correct');
-            finalResult += '🟩';
-        } else {
-            currentGameInput.classList.add('incorrect');
-            finalResult += '⬛️';
-        }
-
-        // exact match -> correct
-        if (trackVal && trackVal === answerTrack) {
-            currentTrackInput.classList.add('correct');
-            finalResult += '🟩';
-        // partial input (non-empty) that's contained in answer -> almost
-        } else if (trackVal.length > 0 && answerTrack.includes(trackVal)) {
-            currentTrackInput.classList.add('almost');
-            finalResult += '🟨';
-        // otherwise incorrect
-        } else {
-            currentTrackInput.classList.add('incorrect');
-            finalResult += '⬛️';
-        }
-
-        currentGameInput.disabled = true;
-        currentTrackInput.disabled = true;
-
-        if (currentGameInput.value === trackOfTheDay.Game && currentTrackInput.value === trackOfTheDay.Track) {
-            //alert('Correct!');
-            guessButton.disabled = true;
-            resultsOverlay.classList.remove('hidden');
-            document.getElementById('resultsButton').classList.remove('hidden');
-            document.getElementById('answer').textContent = `Correct! ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
-            resultString = parseResult(finalResult);
-            document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
-
-            const currentDateStr = new Date().toLocaleDateString();
-            if (lastPlayedDate != currentDateStr) {
-                // already played today; don't increment streak
-                totalCorrect++;
-                localStorage.setItem('totalCorrect', totalCorrect);
-                if (lastPlayedDate === new Date(Date.now() - 86400000).toLocaleDateString()) {
-                    // last played was yesterday; increment streak
-                    streakCount++;
-                } else {
-                    // last played was before yesterday; reset streak
-                    streakCount = 1;
-                }
-                localStorage.setItem('streakCount', streakCount);
-                localStorage.setItem('lastPlayedDate', currentDateStr);
-                totalGames++;
-                localStorage.setItem('totalGames', totalGames);
-            }
-        } else if (guessNum === 6) {
-            // alert(`Incorrect! The track of the day was ${trackOfTheDay.Track} from ${trackOfTheDay.Game}`);
-            guessButton.disabled = true;
-            resultsOverlay.classList.remove('hidden');
-            document.getElementById('resultsButton').classList.remove('hidden');
-            document.getElementById('answer').textContent = `Answer was ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
-            resultString = parseResult(finalResult);
-            document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
-
-            totalGames++;
-            localStorage.setItem('totalGames', totalGames);
-            streakCount = 0;
-            localStorage.setItem('streakCount', streakCount);
-        } else {
-            nextGuess.classList.remove('hidden');
-            if (guessNum <= 6) {
-                guessNum++;
-            }
-        }
-    });
+    guessButton.addEventListener('click', () => guessButtonClicked(trackOfTheDay));
 
     document.getElementById('closeResults').addEventListener('click', function () {
         resultsOverlay.classList.add('hidden');
@@ -1383,22 +1283,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-var player;
-  function onPlayerReady(event) {
-    player = event.target;
-    try { player.pauseVideo(); } catch (e) {}
-    playing = false;
-  }
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player('youtube', {
-    playerVars: {
-      'playsinline': 1
-    },
-    events: {
-      'onReady': onPlayerReady
-    }
-  });
-}
 
 function pickRandomTrack() {
     // const currentDate = new Date();
@@ -1500,4 +1384,127 @@ function parseResult(result) {
     final = `MK Heardle ${dateString}\n` + final;
     console.log(final);
     return final;
+}
+
+function updateTrackList(gameInputElement) {
+    const currentGuessArea = gameInputElement.closest('.guessingArea');
+        if (!currentGuessArea) return;
+        // Find the track input inside this guess area
+        const trackInputLocal = currentGuessArea.querySelector('input.track');
+        trackInputLocal.value = "";
+        if (!trackInputLocal) return;
+        const datalistId = trackInputLocal.getAttribute('list');
+        if (!datalistId) return;
+        const trackOptionsElement = document.getElementById(datalistId);
+        if (!trackOptionsElement) return;
+        trackOptionsElement.innerHTML = '';
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].Game === gameInputElement.value) {
+                trackOptionsElement.appendChild(new Option(data[i].Track, data[i].Track));
+            }
+        }
+}
+
+function playButtonClicked() {
+    if (!playerReady) return;
+
+    const state = player.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+    } else {
+        player.seekTo(0, true);
+        player.playVideo();
+    }
+}
+
+function guessButtonClicked(trackOfTheDay) {
+    let currentGuess = document.getElementById(`guess${guessNum}`);
+    let nextGuess = document.getElementById(`guess${guessNum + 1}`);
+    let currentGameInput = currentGuess.querySelector('.game');
+    let currentTrackInput = currentGuess.querySelector('.track');
+    // use top-level `finalResult` so results accumulate across guesses
+
+    // normalize inputs for robust comparison
+    const gameVal = currentGameInput.value.trim().toLowerCase();
+    const trackVal = currentTrackInput.value.trim().toLowerCase();
+    const answerGame = String(trackOfTheDay.Game).trim().toLowerCase();
+    const answerTrack = String(trackOfTheDay.Track).trim().toLowerCase();
+
+    if (gameVal && gameVal === answerGame) {
+        currentGameInput.classList.add('correct');
+        finalResult += '🟩';
+    } else {
+        currentGameInput.classList.add('incorrect');
+        finalResult += '⬛️';
+    }
+
+    // exact match -> correct
+    if (trackVal && trackVal === answerTrack) {
+        currentTrackInput.classList.add('correct');
+        finalResult += '🟩';
+    // partial input (non-empty) that's contained in answer -> almost
+    } else if (trackVal.length > 0 && answerTrack.includes(trackVal)) {
+        currentTrackInput.classList.add('almost');
+        finalResult += '🟨';
+    // otherwise incorrect
+    } else {
+        currentTrackInput.classList.add('incorrect');
+        finalResult += '⬛️';
+    }
+
+    currentGameInput.disabled = true;
+    currentTrackInput.disabled = true;
+
+    if (currentGameInput.value === trackOfTheDay.Game && currentTrackInput.value === trackOfTheDay.Track) {
+        guessCorrectly(trackOfTheDay, finalResult);
+
+    } else if (guessNum === 6) {
+        guessIncorrectly(trackOfTheDay, finalResult);
+    } else {
+        nextGuess.classList.remove('hidden');
+        if (guessNum <= 6) {
+            guessNum++;
+        }
+    }
+}
+
+function guessCorrectly(trackOfTheDay, finalResult) {
+    guessButton.disabled = true;
+    resultsOverlay.classList.remove('hidden');
+    document.getElementById('resultsButton').classList.remove('hidden');
+    document.getElementById('answer').textContent = `Correct! ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
+    resultString = parseResult(finalResult);
+    document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
+
+    const currentDateStr = new Date().toLocaleDateString();
+    if (lastPlayedDate != currentDateStr) {
+        // already played today; don't increment streak
+        totalCorrect++;
+        localStorage.setItem('totalCorrect', totalCorrect);
+        if (lastPlayedDate === new Date(Date.now() - 86400000).toLocaleDateString()) {
+            // last played was yesterday; increment streak
+            streakCount++;
+        } else {
+            // last played was before yesterday; reset streak
+            streakCount = 1;
+        }
+        localStorage.setItem('streakCount', streakCount);
+        localStorage.setItem('lastPlayedDate', currentDateStr);
+        totalGames++;
+        localStorage.setItem('totalGames', totalGames);
+    }
+}
+
+function guessIncorrectly(trackOfTheDay, finalResult) {
+    guessButton.disabled = true;
+    resultsOverlay.classList.remove('hidden');
+    document.getElementById('resultsButton').classList.remove('hidden');
+    document.getElementById('answer').textContent = `Answer was ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
+    resultString = parseResult(finalResult);
+    document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
+
+    totalGames++;
+    localStorage.setItem('totalGames', totalGames);
+    streakCount = 0;
+    localStorage.setItem('streakCount', streakCount);
 }
