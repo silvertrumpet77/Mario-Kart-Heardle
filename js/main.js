@@ -1186,10 +1186,23 @@ const data = [
     }
 ];
 
+const currentUTC = new Date();
+const currentDate = currentUTC.toISOString().split('T')[0];
+let todaysResult = localStorage.getItem(`${currentDate}_result`);
+let playedToday = false;
+if (todaysResult) {
+    playedToday = true;
+}
+
 const trackInput = document.querySelector('input.track');
 const gameInput = document.querySelector('input.game');
 // Per-guess datalists use unique ids (trackOptions1..6 / gameOptions1..6)
 const playButton = document.getElementById("playButton");
+const pauseButton = document.getElementById("pauseButton");
+const restartButton = document.getElementById("restartButton");
+const settingsButton = document.getElementById("settings");
+const settingsSaveButton = document.getElementById("save");
+
 const youtube = document.getElementById("youtube");
 const guessButton = document.getElementById("submitGuess");
 const allGuesses = document.querySelectorAll('#guess');
@@ -1197,6 +1210,10 @@ const resultsOverlay = document.getElementById("gameOver")
 let guessNum = 1;
 let playing = false;
 let finalResult = '';
+let hintsUsed = 0;
+
+let playerDifficulty = localStorage.getItem('difficulty');
+if (!playerDifficulty) playerDifficulty = 'normal';
 
 let totalCorrect = localStorage.getItem('totalCorrect');
 let totalGames = localStorage.getItem('totalGames');
@@ -1207,9 +1224,25 @@ if (!totalGames) totalGames = 0;
 if (!streakCount) streakCount = 0;
 if (!lastPlayedDate) lastPlayedDate = '';
 
+let num6Guesses = localStorage.getItem('num6Guesses');
+let num5Guesses = localStorage.getItem('num5Guesses');
+let num4Guesses = localStorage.getItem('num4Guesses');
+let num3Guesses = localStorage.getItem('num3Guesses');
+let num2Guesses = localStorage.getItem('num2Guesses');
+let num1Guesses = localStorage.getItem('num1Guesses');
+let numXGuesses = localStorage.getItem('numXGuesses');
+if (!numXGuesses) numXGuesses = 0;
+if (!num6Guesses) num6Guesses = 0;
+if (!num5Guesses) num5Guesses = 0;
+if (!num4Guesses) num4Guesses = 0;
+if (!num3Guesses) num3Guesses = 0;
+if (!num2Guesses) num2Guesses = 0;
+if (!num1Guesses) num1Guesses = 0;
+
 var player;
 let playerReady = false;
 let needsRestart = false;
+let playTimeAllowed = 1000; // milliseconds
 
 const trackOfTheDay = pickRandomTrack();
 
@@ -1242,6 +1275,12 @@ window.onYouTubeIframeAPIReady = function() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    if (playerDifficulty === 'hard') {
+        document.getElementById('hintButton').style.display = 'none';
+        document.getElementById('currentDifficulty').textContent = `${playerDifficulty}`;
+    }
+    document.getElementById('currentDifficulty').textContent = `${playerDifficulty}`;
+
     // Populate track options on game selection (per-guess)
     document.querySelectorAll('input.game').forEach(function(gameInputElement) {
         gameInputElement.addEventListener('click', function() {
@@ -1258,8 +1297,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     playButton.addEventListener('click', playButtonClicked);
+    pauseButton.addEventListener('click', pauseButtonClicked);
+    restartButton.addEventListener('click', restartButtonClicked);
 
     const trackOfTheDay = pickRandomTrack();
+
+    if (playedToday) {
+        guessButton.disabled = true;
+        document.getElementById('hintButton').disabled = true;
+        showResults(trackOfTheDay, todaysResult);
+    }
 
     youtube.src = trackOfTheDay.Music;
 
@@ -1287,11 +1334,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         document.getElementById('correctPercent').textContent = `Percent Guessed: ${accuracy}%`;
         document.getElementById('currentStreak').textContent = `Current Streak: ${streakCount}`;
+        createGuessChart();
     });
 
     document.getElementById('resultsButton').addEventListener('click', function () {
         resultsOverlay.classList.remove('hidden');
     });
+
+    settingsButton.addEventListener('click', function () {
+        document.getElementById('settingsOverlay').classList.remove('hidden');
+    });
+
+    document.getElementById('closeSettings').addEventListener('click', function () {
+        document.getElementById('settingsOverlay').classList.add('hidden');
+    });
+
+    settingsSaveButton.addEventListener('click', saveSettings);
+
+    document.getElementById('hintButton').addEventListener('click', hintButtonPressed);
 });
 
 
@@ -1393,6 +1453,11 @@ function parseResult(result) {
     const date = new Date();
     const dateString = date.toLocaleDateString(undefined, { year: '2-digit', month: 'numeric', day: 'numeric', timeZone: 'UTC' });
     final = `MK Heardle ${dateString}\n` + final;
+    if (playerDifficulty === 'hard') {
+        final += `\n*Hard Mode`;
+    } else {
+        final += `\nHints Used: ${hintsUsed}`;
+    }
     console.log(final);
     return final;
 }
@@ -1417,24 +1482,48 @@ function updateTrackList(gameInputElement) {
 }
 
 function playButtonClicked() {
-    if (!playerReady) return;
-
-    const state = player.getPlayerState();
-    if (state === YT.PlayerState.PLAYING) {
-        player.pauseVideo();
+    if (playerDifficulty === 'normal') {
+        document.getElementById('difficulty').disabled = true;
+    }
+    
+    if (!playerReady) {
+        return;
     } else {
-        needsRestart = true;
-        player.playVideo();
+        if (playerDifficulty === 'hard') {
+            player.playVideo();
+            setTimeout(function() {player.stopVideo();}, playTimeAllowed);
+        } else {
+            player.playVideo();
+        }
+    }
+}
+
+function pauseButtonClicked() {
+    if (playerDifficulty === 'hard') {
+        player.stopVideo();
+    } else {
+        player.pauseVideo();
+    }
+}
+
+function restartButtonClicked() {
+    if (playerDifficulty === 'hard' && YT.PlayerState.PLAYING) {
+        player.seekTo(0, true);
+        setTimeout(function() {player.stopVideo();}, playTimeAllowed);
+    } else {
+        player.seekTo(0, true);
     }
 }
 
 function guessButtonClicked(trackOfTheDay) {
+    settingsSaveButton.disabled = true;
+
     let currentGuess = document.getElementById(`guess${guessNum}`);
     let nextGuess = document.getElementById(`guess${guessNum + 1}`);
     let currentGameInput = currentGuess.querySelector('.game');
     let currentTrackInput = currentGuess.querySelector('.track');
     // use top-level `finalResult` so results accumulate across guesses
-
+    playTimeAllowed += playTimeAllowed; // double allowed time each guess
     // normalize inputs for robust comparison
     const gameVal = currentGameInput.value.trim().toLowerCase();
     const trackVal = currentTrackInput.value.trim().toLowerCase();
@@ -1473,6 +1562,9 @@ function guessButtonClicked(trackOfTheDay) {
         guessIncorrectly(trackOfTheDay, finalResult);
     } else {
         nextGuess.classList.remove('hidden');
+        if (playerDifficulty === 'hard') {
+            document.getElementById('playbackTime').textContent = `Playback Time: ${playTimeAllowed/1000} second(s)`;
+        }
         if (guessNum <= 6) {
             guessNum++;
         }
@@ -1481,11 +1573,11 @@ function guessButtonClicked(trackOfTheDay) {
 
 function guessCorrectly(trackOfTheDay, finalResult) {
     guessButton.disabled = true;
-    resultsOverlay.classList.remove('hidden');
-    document.getElementById('resultsButton').classList.remove('hidden');
-    document.getElementById('answer').textContent = `Correct! ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
-    resultString = parseResult(finalResult);
-    document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
+    document.getElementById('difficulty').disabled = false;
+    settingsSaveButton.disabled = false;
+    document.getElementById('hintButton').disabled = true;
+    showResults(trackOfTheDay, finalResult);
+    incrementGuessNum();
 
     const currentDateStr = new Date().toLocaleDateString();
     if (lastPlayedDate != currentDateStr) {
@@ -1503,19 +1595,117 @@ function guessCorrectly(trackOfTheDay, finalResult) {
         localStorage.setItem('lastPlayedDate', currentDateStr);
         totalGames++;
         localStorage.setItem('totalGames', totalGames);
+        localStorage.setItem('playedToday', 'true');
     }
 }
 
 function guessIncorrectly(trackOfTheDay, finalResult) {
     guessButton.disabled = true;
-    resultsOverlay.classList.remove('hidden');
-    document.getElementById('resultsButton').classList.remove('hidden');
-    document.getElementById('answer').textContent = `Answer was ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
-    resultString = parseResult(finalResult);
-    document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
+    document.getElementById('difficulty').disabled = false;
+    settingsSaveButton.disabled = false;
+    document.getElementById('hintButton').disabled = true;
+    showResults(trackOfTheDay, finalResult);
+    numXGuesses++;
+    localStorage.setItem('numXGuesses', numXGuesses);
 
     totalGames++;
     localStorage.setItem('totalGames', totalGames);
     streakCount = 0;
     localStorage.setItem('streakCount', streakCount);
+    localStorage.setItem('playedToday', 'true');
+    const currentDateStr = new Date().toLocaleDateString();
+    localStorage.setItem('lastPlayedDate', currentDateStr);
+
+}
+
+function saveSettings() {
+    const difficulty = document.getElementById('difficulty').value;
+    localStorage.setItem('difficulty', difficulty);
+    playerDifficulty = difficulty;
+    if (playerDifficulty === 'hard') {
+        document.getElementById('hintButton').style.display = 'none';
+        document.getElementById('playbackTime').textContent = `Playback Time: ${playTimeAllowed/1000} second(s)`;
+    } else {
+        document.getElementById('hintButton').style.display = 'inline-block';
+    }
+    document.getElementById('currentDifficulty').textContent = `${playerDifficulty}`;
+    document.getElementById('settingsOverlay').classList.add('hidden');
+}
+
+function showResults(trackOfTheDay, finalResult) {
+    resultsOverlay.classList.remove('hidden');
+    document.getElementById('resultsButton').classList.remove('hidden');
+    document.getElementById('answer').textContent = `Answer: ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
+    if (playedToday === false) {
+        resultString = parseResult(finalResult);
+        localStorage.setItem(`${currentDate}_result`, resultString);
+        document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
+    } else {
+        document.getElementById('results').innerHTML = finalResult.replace(/\n/g, '<br>');
+    }
+}
+
+function hintButtonPressed() {
+    document.getElementById('hintsRemaining').textContent = `Hints Left: ${6 - (hintsUsed + 1)}`;
+    settingsSaveButton.disabled = true;
+    let maxGuesses = 6;
+    hintsUsed++;
+    if (hintsUsed === 1) {
+        document.getElementById('hintReveal').textContent = trackOfTheDay.Game;
+    } else {
+        if (hintsUsed < maxGuesses) {
+            document.getElementById('hintReveal').textContent = `${trackOfTheDay.Game} - ${trackOfTheDay.Track.slice(0, hintsUsed - 1)}`;
+        } else {
+            document.getElementById('hintReveal').textContent = `${trackOfTheDay.Game} - ${trackOfTheDay.Track.slice(0, hintsUsed - 1)}`;
+            document.getElementById('hintButton').disabled = true;
+        }
+    }
+}
+
+function createGuessChart() {
+    let labels = ['1','2','3','4','5','6', 'X'];
+    let data = {
+        labels: labels,
+        datasets: [{
+            label: 'Number of Guesses',
+            backgroundColor: 'rgb(204, 0, 0)',
+            borderColor: 'rgb(0, 0, 0)',
+            data: [num1Guesses, num2Guesses, num3Guesses, num4Guesses, num5Guesses, num6Guesses, numXGuesses],
+        }]
+    };
+
+    const config = {
+        type: 'bar',
+        data: data,
+        options: {
+            responsive: false,
+        }
+    };
+
+    var guessChart = new Chart(
+        document.getElementById('guessDistribution'),
+        config
+    );
+}
+
+function incrementGuessNum() {
+    if (guessNum === 1) {
+        num1Guesses++;
+        localStorage.setItem('num1Guesses', num1Guesses);
+    } else if (guessNum === 2) {
+        num2Guesses++;
+        localStorage.setItem('num2Guesses', num2Guesses);
+    } else if (guessNum === 3) {
+        num3Guesses++;
+        localStorage.setItem('num3Guesses', num3Guesses);
+    } else if (guessNum === 4) {
+        num4Guesses++;
+        localStorage.setItem('num4Guesses', num4Guesses);
+    } else if (guessNum === 5) {
+        num5Guesses++;
+        localStorage.setItem('num5Guesses', num5Guesses);
+    } else if (guessNum === 6) {
+        num6Guesses++;
+        localStorage.setItem('num6Guesses', num6Guesses);
+    }
 }

@@ -9,12 +9,16 @@
 
         <link rel="stylesheet" href="css/index.css">
         <script src="js/main.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         
     </head>
 
     <body>
         <div id="header">
             <h1>MARIO KART HEARDLE</h1>
+            <button id="settings">
+                <img src="images/settingsIcon.png">
+            </button>
             <button id="stats">
                 <img src="images/barGraph.png" alt="Stats" id="statsImg">
             </button>
@@ -171,9 +175,21 @@
                 <button id="playButton">
                     <img src="images/playButton.avif">
                 </button>
+                <button id="pauseButton">
+                    <img src="images/pauseButton.png">
+                </button>
+                <button id="restartButton">
+                    <img src="images/restartButton.png">
+                </button>
             </div>
             <div id="guessButton">
                 <button id="submitGuess">Guess</button>
+                <button id="hintButton">Hint</button>
+            </div>
+            <div id="hints">
+                <h2 id="hintsRemaining"></h2>
+                <h2 id="hintReveal"></h2>
+                <h2 id="playbackTime"></h2>
             </div>
             <div id="showResults">
                 <button id="resultsButton" class="hidden">Show Results</button>
@@ -197,6 +213,26 @@
             <div id="gamesPlayed" style="white-space: pre; text-align: left;"></div>
             <div id="currentStreak" style="white-space: pre; text-align: left;"></div>
             <div id="maxStreak" style="white-space: pre; text-align: left;"></div>
+            <h2>Guess Distribution</h2>
+            <canvas id="guessDistribution" width="200px" height="170px"></canvas>
+        </div>
+        <div class="overlay hidden" id="settingsOverlay">
+            <div class="close">
+                <button id="closeSettings">X</button>
+            </div>
+            <h2>Settings</h2>
+            <div>
+                <h2>Current Difficulty:</h2>
+                <div id="currentDifficulty"></div>
+                <label for="difficulty">Difficulty</label>
+                <select id="difficulty">
+                    <option value="normal">Normal</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+            <div>
+                <button id="save">Save</button>
+            </div>
         </div>
         <footer id="footer">
             <p>Good luck!</p>
