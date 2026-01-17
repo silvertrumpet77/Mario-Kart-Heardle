@@ -36,7 +36,7 @@ h2 {
     font-size: 10pt;
 }
 
-#statsImg {
+#statsImg, #settings img {
     height: 30px;
     align-items: center;
 }
@@ -118,7 +118,7 @@ input.incorrect {
     background-color: rgb(77, 77, 77);
 }
 
-#playButton {
+#playButton, #pauseButton, #restartButton {
     justify-content: center;
     border: none;
     background-color: transparent;
@@ -127,19 +127,29 @@ input.incorrect {
 
 #playButton:hover {
     cursor: pointer;
-    rotate: 90deg;
-    transition: rotate 0.5s;
+}
+
+#pauseButton img{
+    height: 30px;
+    margin-bottom: 9px;
+}
+
+#restartButton img{
+    height: 33px;
+    margin-bottom: 7px;
+    margin-left: -2px;
 }
 
 #playButton img{
     width: 50px;
+    margin-right: -10px;
 }
 
 .youtube {
     margin: 0px;
 }
 
-#submitGuess, #resultsButton {
+#submitGuess, #resultsButton, #hintButton, #save {
     width: 100px;
     height: 50px;
     font-size: 20px;
@@ -176,7 +186,8 @@ input.incorrect {
 }
 
 #statsOverlay {
-    grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    padding: 20px;
 }
 
 #resultsButton.hidden {
@@ -185,12 +196,12 @@ input.incorrect {
     transition: opacity 0.5s ease;
 }
 
-#closeResults, #closeStats {
+#closeResults, #closeStats, #closeSettings {
     font-size: 15pt;
-    background-color: darkgrey;
+    background-color: rgb(204, 0, 0);
 }
 
-#closeResults:hover, #closeStats:hover {
+#closeResults:hover, #closeStats:hover, #closeSettings:hover {
     cursor: pointer;
     text-decoration: underline;
 }
@@ -229,4 +240,17 @@ input.incorrect {
 #share {
     height: 50px;
     font-size: 15pt;
+}
+
+#save {
+    margin-top: 20px;
+}
+
+#settingsOverlay {
+    display: grid;
+    grid-template-rows: 1fr 1fr 3fr;
+}
+
+#currentDifficulty {
+    margin-bottom: 20px;
 }
