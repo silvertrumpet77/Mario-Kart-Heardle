@@ -1,3 +1,4 @@
+// Data for Mario Kart music tracks
 const data = [
     {
         "Track": "Mario Circut",
@@ -1186,6 +1187,8 @@ const data = [
     }
 ];
 
+/* Get today's date in UTC format (YYYY-MM-DD) and check if the player has played today. 
+    If so, retrieve their result for displaying later */
 const currentUTC = new Date();
 const currentDate = currentUTC.toISOString().split('T')[0];
 let todaysResult = localStorage.getItem(`${currentDate}_result`);
@@ -1194,36 +1197,31 @@ if (todaysResult) {
     playedToday = true;
 }
 
+// DOM Elements for global use
 const trackInput = document.querySelector('input.track');
 const gameInput = document.querySelector('input.game');
-// Per-guess datalists use unique ids (trackOptions1..6 / gameOptions1..6)
 const playButton = document.getElementById("playButton");
 const pauseButton = document.getElementById("pauseButton");
 const restartButton = document.getElementById("restartButton");
 const settingsButton = document.getElementById("settings");
 const settingsSaveButton = document.getElementById("save");
-
 const youtube = document.getElementById("youtube");
 const guessButton = document.getElementById("submitGuess");
 const allGuesses = document.querySelectorAll('#guess');
 const resultsOverlay = document.getElementById("gameOver")
-let guessNum = 1;
-let playing = false;
-let finalResult = '';
-let hintsUsed = 0;
 
+// Game state variables
+let guessNum = 1; // Current guess number (1-6)
+let playing = false; // Is the track currently playing
+let finalResult = ''; // Final result string for sharing
+let hintsUsed = 0; // Number of hints used this game
+
+// Load player stats from localStorage
 let playerDifficulty = localStorage.getItem('difficulty');
-if (!playerDifficulty) playerDifficulty = 'normal';
-
 let totalCorrect = localStorage.getItem('totalCorrect');
 let totalGames = localStorage.getItem('totalGames');
 let lastPlayedDate = localStorage.getItem('lastPlayedDate');
 let streakCount = localStorage.getItem('streakCount');
-if (!totalCorrect) totalCorrect = 0;
-if (!totalGames) totalGames = 0;
-if (!streakCount) streakCount = 0;
-if (!lastPlayedDate) lastPlayedDate = '';
-
 let num6Guesses = localStorage.getItem('num6Guesses');
 let num5Guesses = localStorage.getItem('num5Guesses');
 let num4Guesses = localStorage.getItem('num4Guesses');
@@ -1231,6 +1229,12 @@ let num3Guesses = localStorage.getItem('num3Guesses');
 let num2Guesses = localStorage.getItem('num2Guesses');
 let num1Guesses = localStorage.getItem('num1Guesses');
 let numXGuesses = localStorage.getItem('numXGuesses');
+// Initialize stats if they don't exist
+if (!totalCorrect) totalCorrect = 0;
+if (!totalGames) totalGames = 0;
+if (!streakCount) streakCount = 0;
+if (!lastPlayedDate) lastPlayedDate = '';
+if (!playerDifficulty) playerDifficulty = 'normal';
 if (!numXGuesses) numXGuesses = 0;
 if (!num6Guesses) num6Guesses = 0;
 if (!num5Guesses) num5Guesses = 0;
@@ -1239,14 +1243,16 @@ if (!num3Guesses) num3Guesses = 0;
 if (!num2Guesses) num2Guesses = 0;
 if (!num1Guesses) num1Guesses = 0;
 
+
+// YouTube Player API setup
 var player;
 let playerReady = false;
 let needsRestart = false;
 let playTimeAllowed = 1000; // milliseconds
 
-const trackOfTheDay = pickRandomTrack();
+const trackOfTheDay = pickRandomTrack(); // Pre-select the track of the day
 
-const src = trackOfTheDay.Music;
+const src = trackOfTheDay.Music; // YouTube video URL
 
 function onPlayerReady(event) {
     player = event.target;
@@ -1274,7 +1280,9 @@ window.onYouTubeIframeAPIReady = function() {
   });
 }
 
+// Initialize the game when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Set difficulty display and hint button visibility
     if (playerDifficulty === 'hard') {
         document.getElementById('hintButton').style.display = 'none';
         document.getElementById('currentDifficulty').textContent = `${playerDifficulty}`;
@@ -1284,7 +1292,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Populate track options on game selection (per-guess)
     document.querySelectorAll('input.game').forEach(function(gameInputElement) {
         gameInputElement.addEventListener('click', function() {
-            gameInputElement.value = "";
+            gameInputElement.value = ""; // Clear the input on click
         });
 
         gameInputElement.addEventListener('change', () => updateTrackList(gameInputElement));
@@ -1292,35 +1300,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.querySelectorAll('input.track').forEach(function(trackInputElement) {
         trackInputElement.addEventListener('click', function() {
-            trackInputElement.value = "";
+            trackInputElement.value = ""; // Clear the input on click
         });
     });
 
+    // Set up playback control buttons
     playButton.addEventListener('click', playButtonClicked);
     pauseButton.addEventListener('click', pauseButtonClicked);
     restartButton.addEventListener('click', restartButtonClicked);
 
-    const trackOfTheDay = pickRandomTrack();
-
+    // If the player has already played today, disable inputs and show results
     if (playedToday) {
         guessButton.disabled = true;
         document.getElementById('hintButton').disabled = true;
         showResults(trackOfTheDay, todaysResult);
     }
 
-    youtube.src = trackOfTheDay.Music;
-
+    // Set up guess submission button
     guessButton.addEventListener('click', () => guessButtonClicked(trackOfTheDay));
 
+    // Set up close buttons for overlays
     document.getElementById('closeResults').addEventListener('click', function () {
         resultsOverlay.classList.add('hidden');
     });
-
     document.getElementById('closeStats').addEventListener('click', function () {
         document.getElementById('statsOverlay').classList.add('hidden');
     });
+    document.getElementById('closeSettings').addEventListener('click', function () {
+        document.getElementById('settingsOverlay').classList.add('hidden');
+    });
 
+    // Set up share, results, settings, and stats buttons
     document.getElementById('share').addEventListener('click', function () {
+        // Copy finalResult to clipboard
         navigator.clipboard.writeText(resultString);
         document.getElementById('share').textContent = 'Copied to Clipboard';
     });
@@ -1345,10 +1357,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('settingsOverlay').classList.remove('hidden');
     });
 
-    document.getElementById('closeSettings').addEventListener('click', function () {
-        document.getElementById('settingsOverlay').classList.add('hidden');
-    });
-
+    // Set up save and hint buttons
     settingsSaveButton.addEventListener('click', saveSettings);
 
     document.getElementById('hintButton').addEventListener('click', hintButtonPressed);
@@ -1356,12 +1365,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 function pickRandomTrack() {
-    // const currentDate = new Date();
-    // currentDate.toLocaleDateString();
-    // const seed = currentDate.getFullYear() + currentDate.getMonth() + currentDate.getDate();
-    // const randomIndex = Math.floor((Math.sin(seed) + 1) / 2 * data.length);
-    // const track = data[randomIndex];
-
+    // Deterministically shuffle the track list and pick one based on the current UTC day
     const SHUFFLE_SEED = 0xC0FFEE; // any fixed number
 
     const startDate = Date.UTC(2024, 0, 1); // fixed epoch
@@ -1372,29 +1376,30 @@ function pickRandomTrack() {
     const index = dayIndex % shuffledData.length;
     const track = shuffledData[index];
 
-    // console.log(`Randomly selected track: ${track.Track} from ${track.Game}`);
     return track;
 }
 
 function mulberry32(seed) {
-  return function () {
-    let t = seed += 0x6D2B79F5;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
+    // Returns a seeded pseudo-random number generator function
+    return function () {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
 }
 
 function shuffleDeterministic(array, seed) {
-  const rng = mulberry32(seed);
-  const arr = [...array];
+    // Shuffle an array deterministically based on a seed
+    const rng = mulberry32(seed);
+    const arr = [...array];
 
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
 
-  return arr;
+    return arr;
 }
 
 function parseResult(result) {
@@ -1453,16 +1458,18 @@ function parseResult(result) {
     const date = new Date();
     const dateString = date.toLocaleDateString(undefined, { year: '2-digit', month: 'numeric', day: 'numeric', timeZone: 'UTC' });
     final = `MK Heardle ${dateString}\n` + final;
+    // Append difficulty/hints info
     if (playerDifficulty === 'hard') {
         final += `\n*Hard Mode`;
     } else {
         final += `\nHints Used: ${hintsUsed}`;
     }
-    console.log(final);
+
     return final;
 }
 
 function updateTrackList(gameInputElement) {
+    // function to update track list based on selected game
     const currentGuessArea = gameInputElement.closest('.guessingArea');
         if (!currentGuessArea) return;
         // Find the track input inside this guess area
@@ -1482,8 +1489,9 @@ function updateTrackList(gameInputElement) {
 }
 
 function playButtonClicked() {
+    // function to handle play button click
     if (playerDifficulty === 'normal') {
-        document.getElementById('difficulty').disabled = true;
+        document.getElementById('difficulty').disabled = true; // lock difficulty selection to prevent cheating
     }
     
     if (!playerReady) {
@@ -1491,7 +1499,7 @@ function playButtonClicked() {
     } else {
         if (playerDifficulty === 'hard') {
             player.playVideo();
-            setTimeout(function() {player.stopVideo();}, playTimeAllowed);
+            setTimeout(function() {player.stopVideo();}, playTimeAllowed); // stop after allowed time for hard mode
         } else {
             player.playVideo();
         }
@@ -1499,6 +1507,7 @@ function playButtonClicked() {
 }
 
 function pauseButtonClicked() {
+    // function to handle pause button click
     if (playerDifficulty === 'hard') {
         player.stopVideo();
     } else {
@@ -1507,6 +1516,7 @@ function pauseButtonClicked() {
 }
 
 function restartButtonClicked() {
+    // function to handle restart button click
     if (playerDifficulty === 'hard' && YT.PlayerState.PLAYING) {
         player.seekTo(0, true);
         setTimeout(function() {player.stopVideo();}, playTimeAllowed);
@@ -1516,13 +1526,14 @@ function restartButtonClicked() {
 }
 
 function guessButtonClicked(trackOfTheDay) {
-    settingsSaveButton.disabled = true;
+    // function to handle guess submission
+    settingsSaveButton.disabled = true; // prevent changing settings mid-game
 
     let currentGuess = document.getElementById(`guess${guessNum}`);
     let nextGuess = document.getElementById(`guess${guessNum + 1}`);
     let currentGameInput = currentGuess.querySelector('.game');
     let currentTrackInput = currentGuess.querySelector('.track');
-    // use top-level `finalResult` so results accumulate across guesses
+
     playTimeAllowed += playTimeAllowed; // double allowed time each guess
     // normalize inputs for robust comparison
     const gameVal = currentGameInput.value.trim().toLowerCase();
@@ -1530,6 +1541,7 @@ function guessButtonClicked(trackOfTheDay) {
     const answerGame = String(trackOfTheDay.Game).trim().toLowerCase();
     const answerTrack = String(trackOfTheDay.Track).trim().toLowerCase();
 
+    // Check game guess
     if (gameVal && gameVal === answerGame) {
         currentGameInput.classList.add('correct');
         finalResult += '🟩';
@@ -1538,6 +1550,7 @@ function guessButtonClicked(trackOfTheDay) {
         finalResult += '⬛️';
     }
 
+    // Check track guess
     // exact match -> correct
     if (trackVal && trackVal === answerTrack) {
         currentTrackInput.classList.add('correct');
@@ -1552,18 +1565,19 @@ function guessButtonClicked(trackOfTheDay) {
         finalResult += '⬛️';
     }
 
+    // Disable current inputs in preparation for next guess
     currentGameInput.disabled = true;
     currentTrackInput.disabled = true;
 
+    // Execute game logic based on guess correctness
     if (currentGameInput.value === trackOfTheDay.Game && currentTrackInput.value === trackOfTheDay.Track) {
         guessCorrectly(trackOfTheDay, finalResult);
-
-    } else if (guessNum === 6) {
+    } else if (guessNum === 6) { // all out of guesses
         guessIncorrectly(trackOfTheDay, finalResult);
-    } else {
+    } else { // prepare for next guess
         nextGuess.classList.remove('hidden');
         if (playerDifficulty === 'hard') {
-            document.getElementById('playbackTime').textContent = `Playback Time: ${playTimeAllowed/1000} second(s)`;
+            document.getElementById('playbackTime').textContent = `Playback Time: ${playTimeAllowed/1000} second(s)`; // update playback time display
         }
         if (guessNum <= 6) {
             guessNum++;
@@ -1572,14 +1586,16 @@ function guessButtonClicked(trackOfTheDay) {
 }
 
 function guessCorrectly(trackOfTheDay, finalResult) {
-    guessButton.disabled = true;
-    document.getElementById('difficulty').disabled = false;
-    settingsSaveButton.disabled = false;
-    document.getElementById('hintButton').disabled = true;
-    showResults(trackOfTheDay, finalResult);
-    incrementGuessNum();
+    // function to handle correct guess
+    guessButton.disabled = true; // disable further guesses
+    document.getElementById('difficulty').disabled = false; // re-enable difficulty selection
+    settingsSaveButton.disabled = false; // re-enable settings save button
+    document.getElementById('hintButton').disabled = true; // disable hints after correct guess
+    showResults(trackOfTheDay, finalResult); // show results overlay
+    incrementGuessNum(); // increment guess distribution stats
 
     const currentDateStr = new Date().toLocaleDateString();
+    // Update stats only if not already played today
     if (lastPlayedDate != currentDateStr) {
         // already played today; don't increment streak
         totalCorrect++;
@@ -1591,6 +1607,7 @@ function guessCorrectly(trackOfTheDay, finalResult) {
             // last played was before yesterday; reset streak
             streakCount = 1;
         }
+        // save updated stats to localStorage
         localStorage.setItem('streakCount', streakCount);
         localStorage.setItem('lastPlayedDate', currentDateStr);
         totalGames++;
@@ -1600,17 +1617,19 @@ function guessCorrectly(trackOfTheDay, finalResult) {
 }
 
 function guessIncorrectly(trackOfTheDay, finalResult) {
-    guessButton.disabled = true;
-    document.getElementById('difficulty').disabled = false;
-    settingsSaveButton.disabled = false;
-    document.getElementById('hintButton').disabled = true;
-    showResults(trackOfTheDay, finalResult);
-    numXGuesses++;
-    localStorage.setItem('numXGuesses', numXGuesses);
+    // function to handle incorrect guess after all attempts
+    guessButton.disabled = true; // disable further guesses
+    document.getElementById('difficulty').disabled = false; // re-enable difficulty selection
+    settingsSaveButton.disabled = false; // re-enable settings save button
+    document.getElementById('hintButton').disabled = true; // disable hints after game over
+    showResults(trackOfTheDay, finalResult); // show results overlay
+    numXGuesses++; // increment fail stats
+    localStorage.setItem('numXGuesses', numXGuesses); // save to localStorage
 
+    // Update stats
     totalGames++;
     localStorage.setItem('totalGames', totalGames);
-    streakCount = 0;
+    streakCount = 0; // reset streak on incorrect guess
     localStorage.setItem('streakCount', streakCount);
     localStorage.setItem('playedToday', 'true');
     const currentDateStr = new Date().toLocaleDateString();
@@ -1619,43 +1638,54 @@ function guessIncorrectly(trackOfTheDay, finalResult) {
 }
 
 function saveSettings() {
+    // function to save settings changes
     const difficulty = document.getElementById('difficulty').value;
     localStorage.setItem('difficulty', difficulty);
     playerDifficulty = difficulty;
     if (playerDifficulty === 'hard') {
+        // hide hint button for hard mode
         document.getElementById('hintButton').style.display = 'none';
+        // set initial playback time for hard mode
         document.getElementById('playbackTime').textContent = `Playback Time: ${playTimeAllowed/1000} second(s)`;
     } else {
+        // show hint button for normal mode
         document.getElementById('hintButton').style.display = 'inline-block';
     }
+    // update current difficulty display for user
     document.getElementById('currentDifficulty').textContent = `${playerDifficulty}`;
-    document.getElementById('settingsOverlay').classList.add('hidden');
+    document.getElementById('settingsOverlay').classList.add('hidden'); // close settings overlay
 }
 
 function showResults(trackOfTheDay, finalResult) {
+    // function to display results overlay
     resultsOverlay.classList.remove('hidden');
-    document.getElementById('resultsButton').classList.remove('hidden');
+    document.getElementById('resultsButton').classList.remove('hidden'); // show results button to reopen overlay if it gets closed
     document.getElementById('answer').textContent = `Answer: ${trackOfTheDay.Game}: ${trackOfTheDay.Track}`;
-    if (playedToday === false) {
+    if (playedToday === false) { // only save result if not already played today
         resultString = parseResult(finalResult);
         localStorage.setItem(`${currentDate}_result`, resultString);
-        document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>');
+        document.getElementById('results').innerHTML = resultString.replace(/\n/g, '<br>'); // display formatted result with HTML line breaks
     } else {
         document.getElementById('results').innerHTML = finalResult.replace(/\n/g, '<br>');
     }
 }
 
 function hintButtonPressed() {
-    document.getElementById('hintsRemaining').textContent = `Hints Left: ${6 - (hintsUsed + 1)}`;
-    settingsSaveButton.disabled = true;
-    let maxGuesses = 6;
-    hintsUsed++;
-    if (hintsUsed === 1) {
+    // function to handle hint button press
+    let maxGuesses = 2; // max hints for normal mode
+    // Update hints remaining display
+    document.getElementById('hintsRemaining').textContent = `Hints Left: ${maxGuesses - (hintsUsed + 1)}`;
+    settingsSaveButton.disabled = true; // prevent changing settings mid-game
+    
+    hintsUsed++; // increment hints used
+
+    // Reveal hint based on number of hints used
+    if (hintsUsed === 1) { // first hint: reveal game
         document.getElementById('hintReveal').textContent = trackOfTheDay.Game;
     } else {
-        if (hintsUsed < maxGuesses) {
+        if (hintsUsed < maxGuesses) { // second hint: reveal part of track name
             document.getElementById('hintReveal').textContent = `${trackOfTheDay.Game} - ${trackOfTheDay.Track.slice(0, hintsUsed - 1)}`;
-        } else {
+        } else { // no more hints: reveal another part of track name and disable hint button
             document.getElementById('hintReveal').textContent = `${trackOfTheDay.Game} - ${trackOfTheDay.Track.slice(0, hintsUsed - 1)}`;
             document.getElementById('hintButton').disabled = true;
         }
@@ -1663,6 +1693,7 @@ function hintButtonPressed() {
 }
 
 function createGuessChart() {
+    // function to create guess distribution chart using Chart.js
     let labels = ['1','2','3','4','5','6', 'X'];
     let data = {
         labels: labels,
@@ -1689,6 +1720,7 @@ function createGuessChart() {
 }
 
 function incrementGuessNum() {
+    // function to increment guess distribution stats
     if (guessNum === 1) {
         num1Guesses++;
         localStorage.setItem('num1Guesses', num1Guesses);
