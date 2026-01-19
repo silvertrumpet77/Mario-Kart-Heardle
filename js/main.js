@@ -1205,7 +1205,7 @@ const pauseButton = document.getElementById("pauseButton");
 const restartButton = document.getElementById("restartButton");
 const settingsButton = document.getElementById("settings");
 const settingsSaveButton = document.getElementById("save");
-const youtube = document.getElementById("youtube");
+const youtubeFrame = document.getElementById("youtube");
 const guessButton = document.getElementById("submitGuess");
 const allGuesses = document.querySelectorAll('#guess');
 const resultsOverlay = document.getElementById("gameOver")
@@ -1253,38 +1253,39 @@ let playTimeAllowed = 1000; // milliseconds
 const trackOfTheDay = pickRandomTrack(); // Pre-select the track of the day
 
 const src = trackOfTheDay.Music; // YouTube video URL
+const videoId = src.split('embed/')[1].split('?')[0]; // Extract video ID from URL
+console.log(videoId);
 
 function onPlayerReady(event) {
     player = event.target;
     playerReady = true;
+    player.loadVideoById(videoId);
 }
 
 function onPlayerStateChange(event) {
-  if (event.data === YT.PlayerState.PLAYING && needsRestart) {
-    needsRestart = false;
-    player.seekTo(0, true);
-  }
 }
 
 
 window.onYouTubeIframeAPIReady = function() {
-  player = new YT.Player('youtube', {
-    videoId: src,
-    playerVars: {
-      'playsinline': 1
-    },
-    events: {
-      'onReady': onPlayerReady,
-      'onStateChange': onPlayerStateChange
-    }
-  });
+    player = new YT.Player('youtube', {
+        videoId: videoId,
+        playerVars: {
+        'playsinline': 1
+        },
+        events: {
+        'onReady': onPlayerReady,
+        'onStateChange': onPlayerStateChange
+        }
+    });
+}
+
+function loadVideoId() {
+    player.loadVideoById(videoId);
 }
 
 // Initialize the game when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
-    const trackOfTheDay = pickRandomTrack(); // Pre-select the track of the day
-    const src = trackOfTheDay.Music; // YouTube video URL
-    
+
     // Set difficulty display and hint button visibility
     if (playerDifficulty === 'hard') {
         document.getElementById('hintButton').style.display = 'none';
@@ -1496,6 +1497,8 @@ function playButtonClicked() {
     if (playerDifficulty === 'normal') {
         document.getElementById('difficulty').disabled = true; // lock difficulty selection to prevent cheating
     }
+
+    //loadVideoId();
     
     if (!playerReady) {
         return;
