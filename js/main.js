@@ -1282,6 +1282,9 @@ window.onYouTubeIframeAPIReady = function() {
 
 // Initialize the game when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
+    const trackOfTheDay = pickRandomTrack(); // Pre-select the track of the day
+    const src = trackOfTheDay.Music; // YouTube video URL
+    
     // Set difficulty display and hint button visibility
     if (playerDifficulty === 'hard') {
         document.getElementById('hintButton').style.display = 'none';
