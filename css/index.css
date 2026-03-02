@@ -147,6 +147,8 @@ input.incorrect {
 
 .youtube {
     margin: 0px;
+    position: absolute;
+    left: -9999px;
 }
 
 #submitGuess, #resultsButton, #hintButton, #save {
@@ -253,4 +255,8 @@ input.incorrect {
 
 #currentDifficulty {
     margin-bottom: 20px;
+}
+
+img.hidden {
+    display: none;
 }

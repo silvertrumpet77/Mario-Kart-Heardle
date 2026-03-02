@@ -1209,6 +1209,7 @@ const youtubeFrame = document.getElementById("youtube");
 const guessButton = document.getElementById("submitGuess");
 const allGuesses = document.querySelectorAll('#guess');
 const resultsOverlay = document.getElementById("gameOver")
+const playingGif = document.getElementById('playingGif');
 
 // Game state variables
 let guessNum = 1; // Current guess number (1-6)
@@ -1256,13 +1257,27 @@ const src = trackOfTheDay.Music; // YouTube video URL
 const videoId = src.split('embed/')[1].split('?')[0]; // Extract video ID from URL
 console.log(videoId);
 
+function updatePlayer() {
+    if (playerDifficulty === 'hard') {
+        player.cueVideoById({'videoId': videoId, 'endSeconds': playTimeAllowed / 1000});
+    } else {
+        player.cueVideoById(videoId);
+    }
+}
+
 function onPlayerReady(event) {
     player = event.target;
     playerReady = true;
-    player.loadVideoById(videoId);
+    updatePlayer();
 }
 
 function onPlayerStateChange(event) {
+    if (playingGif.classList.contains('hidden') && event.data == YT.PlayerState.PLAYING) {
+        playingGif.classList.remove('hidden');
+    }
+     else {
+        playingGif.classList.add('hidden');
+    }
 }
 
 
@@ -1500,22 +1515,18 @@ function playButtonClicked() {
 
     //loadVideoId();
     
-    if (!playerReady) {
-        return;
-    } else {
-        if (playerDifficulty === 'hard') {
-            player.playVideo();
-            setTimeout(function() {player.stopVideo();}, playTimeAllowed); // stop after allowed time for hard mode
-        } else {
-            player.playVideo();
-        }
+    if (playerReady) {
+        player.playVideo();
+        playingGif.classList.remove('hidden');
     }
 }
 
 function pauseButtonClicked() {
     // function to handle pause button click
+    playingGif.classList.add('hidden');
     if (playerDifficulty === 'hard') {
         player.stopVideo();
+        updatePlayer(); // otherwise we lose the hard mode time limit
     } else {
         player.pauseVideo();
     }
@@ -1523,22 +1534,25 @@ function pauseButtonClicked() {
 
 function restartButtonClicked() {
     // function to handle restart button click
-    if (playerDifficulty === 'hard' && YT.PlayerState.PLAYING) {
-        player.seekTo(0, true);
-        setTimeout(function() {player.stopVideo();}, playTimeAllowed);
-    } else {
-        player.seekTo(0, true);
+    if (playingGif.classList.contains('hidden')) {
+        playingGif.classList.remove('hidden');
     }
+    player.seekTo(0, true);
 }
 
 function guessButtonClicked(trackOfTheDay) {
     // function to handle guess submission
+
     settingsSaveButton.disabled = true; // prevent changing settings mid-game
 
     let currentGuess = document.getElementById(`guess${guessNum}`);
     let nextGuess = document.getElementById(`guess${guessNum + 1}`);
     let currentGameInput = currentGuess.querySelector('.game');
     let currentTrackInput = currentGuess.querySelector('.track');
+
+    if (currentGameInput.value === "" || currentTrackInput.value === "") {
+        return; // don't allow submission if either field is empty
+    }
 
     playTimeAllowed += playTimeAllowed; // double allowed time each guess
     // normalize inputs for robust comparison
@@ -1584,6 +1598,7 @@ function guessButtonClicked(trackOfTheDay) {
         nextGuess.classList.remove('hidden');
         if (playerDifficulty === 'hard') {
             document.getElementById('playbackTime').textContent = `Playback Time: ${playTimeAllowed/1000} second(s)`; // update playback time display
+            updatePlayer();
         }
         if (guessNum <= 6) {
             guessNum++;
@@ -1593,12 +1608,20 @@ function guessButtonClicked(trackOfTheDay) {
 
 function guessCorrectly(trackOfTheDay, finalResult) {
     // function to handle correct guess
+    
     guessButton.disabled = true; // disable further guesses
     document.getElementById('difficulty').disabled = false; // re-enable difficulty selection
     settingsSaveButton.disabled = false; // re-enable settings save button
     document.getElementById('hintButton').disabled = true; // disable hints after correct guess
     showResults(trackOfTheDay, finalResult); // show results overlay
     incrementGuessNum(); // increment guess distribution stats
+
+    if (playerDifficulty === 'hard') {
+        playTimeAllowed = 300000; //play full video on win in hard mode
+        updatePlayer();
+        player.playVideo();
+        playingGif.classList.remove('hidden');
+    }
 
     const currentDateStr = new Date().toLocaleDateString();
     // Update stats only if not already played today
@@ -1632,6 +1655,13 @@ function guessIncorrectly(trackOfTheDay, finalResult) {
     numXGuesses++; // increment fail stats
     localStorage.setItem('numXGuesses', numXGuesses); // save to localStorage
 
+    if (playerDifficulty === 'hard') {
+        playTimeAllowed = 300000; //play full video on win in hard mode
+        updatePlayer();
+        player.playVideo();
+        playingGif.classList.remove('hidden');
+    }
+
     // Update stats
     totalGames++;
     localStorage.setItem('totalGames', totalGames);
@@ -1660,6 +1690,8 @@ function saveSettings() {
     // update current difficulty display for user
     document.getElementById('currentDifficulty').textContent = `${playerDifficulty}`;
     document.getElementById('settingsOverlay').classList.add('hidden'); // close settings overlay
+
+    updatePlayer();
 }
 
 function showResults(trackOfTheDay, finalResult) {
